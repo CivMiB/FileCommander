@@ -1,33 +1,86 @@
-# подключаем графическую библиотеку
-from tkinter import *
 # Реализовать прототип консольной программы - проводника, для работы с файлами.
 # Создать функции создания, удаления, перемещения, копирования(файла, папки)
 # с использованием системы контроля версий git. Зарегистрироваться на Github
 # и выгрузить с помощью git программу в созданный репозиторий. Прикрепить ссылку на репозиторий.
 
-import tkinter as ttk
+from tkinter import ttk
+import tkinter as tk
 import os
 
-# Создаём класс основного окна
-class App(ttk.Tk):
 
+# Создаём класс основного окна
+class App(tk.Tk):
     def __init__(self):
         super().__init__()
-
         # Устанавливаем параметры окна
         self.title('File Commander')
-        self.geometry('1000x600+250+50')
+        self.geometry('1000x600+1450+150')
         self.resizable(0, 0)
+        self.put_frames()
 
-        # Создаём виджеты кнопок
-        ButtonPanel(self)
-        # Создаём виджеты файловых панелей
-        FilePanel(self, 0)
-        FilePanel(self, 1)
-        # Создаём виджеты пути файловых панелей
-        PathPanel(self, 0)
-        PathPanel(self, 1)
+    # Создаём фреймы основного окна
+    def put_frames(self):
+        self.add_left_panel = LeftPanel(self).place(x=0, y=0, width=500, height=570)
+        self.add_right_panel = RightPanel(self).place(x=500, y=0, width=500, height=570)
+        self.add_button_panel = ButtonPanel(self).place(x=0, y=570, width=1000, height=30)
 
+    def refresh(self):
+        all_frames = [f for f in self.children]
+        for f_name in all_frames:
+            self.nametowidget(f_name).destroy()
+        self.put_frames()
+
+
+class LeftPanel(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.columnconfigure((0), weight=1, uniform='a')
+        self.rowconfigure([i for i in range(20)], weight=1, uniform='a')
+        self['background'] = '#C0C0C0'
+        self['bd'] = 1
+        self['relief'] = 'solid'
+        self.put_widgets()
+
+    def put_widgets(self):
+        # Текущая директория
+        self.show_path = ttk.Label(self, background='#C0C0C0', text=CurrentDirectory.left_panel,
+                                   anchor="w", font=("Arial", 13))
+        self.show_path.grid(row=0, column=0, sticky='nswe')
+
+        # Выводим имена файлов
+        for row_files in range(0, 19):
+            self.panel = ttk.Label(self, background='#C0C0C0',
+                                   text=files_list(CurrentDirectory.left_panel)[row_files],
+                                   anchor="w", font=("Arial", 13))
+            if Cursor.position == row_files and Cursor.panel == 0:
+                self.panel.config(background='#99CCFF')
+            self.panel.grid(row=row_files+1, column=0, sticky='nswe')
+
+
+class RightPanel(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.columnconfigure((0), weight=1, uniform='a')
+        self.rowconfigure([i for i in range(20)], weight=1, uniform='a')
+        self['background'] = '#C0C0C0'
+        self['bd'] = 1
+        self['relief'] = 'solid'
+        self.put_widgets()
+
+    def put_widgets(self):
+        # Текущая директория
+        self.show_path = ttk.Label(self, background='#C0C0C0', text=CurrentDirectory.right_panel,
+                                   anchor="w", font=("Arial", 13))
+        self.show_path.grid(row=0, column=0, sticky='nswe')
+
+        # Выводим имена файлов
+        for row_files in range(0, 19):
+            self.panel = ttk.Label(self, background='#C0C0C0',
+                                   text=files_list(CurrentDirectory.left_panel)[row_files],
+                                   anchor="w", font=("Arial", 13))
+            if Cursor.position == row_files and Cursor.panel == 1:
+                self.panel.config(background='#99CCFF')
+            self.panel.grid(row=row_files+1, column=0, sticky='nswe')
 
 # Создаём класс кнопок управления
 class ButtonPanel(ttk.Frame):
@@ -58,104 +111,57 @@ class ButtonPanel(ttk.Frame):
         self.button_create_dir.grid(row=0, column=3, sticky='nswe')
         self.button_delete.grid(row=0, column=4, sticky='nswe')
 
-# Создаём класс файловой панели
-class FilePanel(ttk.Frame):
-    def __init__(self, parent, panel_number):
-        super().__init__(parent)
-        # Задаём параметры панели в зависимости от расположения '0' - левая, '1' - правая
-        if panel_number == 0:
-            self.panel_x = 0
-            self.panel_color = '#C0C0C0'
-            self.now_dir = CurrentDirectory.panel0
-        else:
-            self.panel_x = 500
-            self.panel_color = '#E0E0E0'
-            self.now_dir = CurrentDirectory.panel1
-        # Указываем размещение нашего фрейма на главном окне
-        self.place(x=self.panel_x, y=30, width=500, height=540)
-        # Конфигурируем сетку
-        self.columnconfigure((0), weight=1, uniform='a')
-        self.rowconfigure((0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17),
-                          weight=1, uniform='a')
-        self.show(panel_number)
-
-    def show(self, panel_number):
-        # Создаём list из списка файлов текущей директории.
-        panel_file_list = list()
-        panel_file_list.insert(0, '...')
-        with os.scandir(self.now_dir) as file_list:
-            for file in file_list:
-                if file.is_dir():
-                    panel_file_list.append('Папка: ' + file.name)
-                else:
-                    panel_file_list.append('Файл: ' + file.name)
-        panel_file_list.sort()
-
-        for i in range(18):
-            if i > len(panel_file_list) - 1:
-                panel_file_list.append('')
-
-        # Выводим на экран список фалов
-        print('Вывод')
-        for row_files in range(18):
-            self.panel = ttk.Label(self, background=self.panel_color, text=panel_file_list[row_files],
-                                   anchor="w", font=("Arial", 13))
-            if Cursor.position == row_files and panel_number == Cursor.panel:
-                self.panel.config(background='#99CCFF')
-            self.panel.grid(row=row_files, column=0, sticky='nswe')
-
-    def refresh(self):
-        for i in range(18):
-            self.panel.destroy(row=i, column=0)
-        print(222)
-
-
-class PathPanel(ttk.Frame):
-    def __init__(self, parent, panel_number):
-        super().__init__(parent)
-        # Задаём параметры панели в зависимости от расположения '0' - левая, '1' - правая
-        if panel_number == 0:
-            panel_x = 0
-            panel_color = '#0000FF'
-            now_dir = CurrentDirectory.panel0
-        else:
-            panel_x = 500
-            panel_color = '#3333FF'
-            now_dir = CurrentDirectory.panel1
-        # Конфигурируем сетку
-        self.columnconfigure((0), weight=1, uniform='a')
-        self.rowconfigure((0), weight=1, uniform='a')
-        # Указываем размещение нашего фрейма на главном окне
-        self.place(x=panel_x, y=0, width=500, height=30)
-        self.panel = ttk.Label(self, background=panel_color, text=now_dir,
-                               anchor="w", font=("Arial", 13))
-        self.panel.grid(row=0, column=0, sticky='nswe')
-
-
 
 class CurrentDirectory:
-    panel0 = os.path.abspath(os.curdir)
-    panel1 = os.path.abspath(os.curdir)
+    left_panel = os.path.abspath(os.curdir)
+    right_panel = os.path.abspath(os.curdir)
 
 
 class Cursor:
     panel = 0
-    position = 0
+    position = 1
+    max_position = 0
 
+def files_list(cur_dir):
+    # Создаём list из списка файлов текущей директории.
+    panel_file_list = list(('...',))
+    with os.scandir(cur_dir) as file_list:
+        for file in file_list:
+            if file.is_dir():
+                panel_file_list.append('Папка: ' + file.name)
+            else:
+                panel_file_list.append('Файл: ' + file.name)
+    panel_file_list.sort()
+
+    Cursor.max_position = (len(panel_file_list)) - 1
+
+    for i in range(1, 19):
+        if i > len(panel_file_list) - 1:
+            panel_file_list.append('')
+    return panel_file_list
 
 def cursor_move_down(event):
-    Cursor.position += 1
-    print(Cursor.position)
-    FilePanel.refresh()
+    if Cursor.position < Cursor.max_position:
+        Cursor.position += 1
+    app.refresh()
+
 
 def cursor_move_up(event):
-    Cursor.position -= 1
-    print(Cursor.position)
-    FilePanel.refresh()
+    if Cursor.position > 0:
+        Cursor.position -= 1
+    app.refresh()
+
+def cursor_tab(event):
+    if Cursor.panel == 0:
+        Cursor.panel = 1
+    else:
+        Cursor.panel = 0
+    app.refresh()
 
 
 if __name__ == "__main__":
     app = App()
     app.bind('<Up>', cursor_move_up)
     app.bind('<Down>', cursor_move_down)
+    app.bind('<Tab>', cursor_tab)
     app.mainloop()
