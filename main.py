@@ -1,8 +1,3 @@
-# Реализовать прототип консольной программы - проводника, для работы с файлами.
-# Создать функции создания, удаления, перемещения, копирования(файла, папки)
-# с использованием системы контроля версий git. Зарегистрироваться на Github
-# и выгрузить с помощью git программу в созданный репозиторий. Прикрепить ссылку на репозиторий.
-
 from tkinter import ttk
 import tkinter as tk
 from tkinter.messagebox import showinfo
@@ -16,7 +11,7 @@ class App(tk.Tk):
         super().__init__()
         # Устанавливаем параметры окна
         self.title('File Commander')
-        self.geometry('1000x630+1450+150')
+        self.geometry('1000x630+50+50')
         self.resizable(0, 0)
         self.put_frames()
 
